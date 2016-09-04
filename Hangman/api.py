@@ -97,7 +97,7 @@ class HangmanApi(remote.Service):
             return game.to_form('Game already over!')
 
         letterInWord = False
-         for i, c in enumerate(game.target):
+        for i, c in enumerate(game.target):
             if request.guess == c and i not in game.guessed_letters:
                 game.guessed_letters.append(i)
                 letterInWord = True
