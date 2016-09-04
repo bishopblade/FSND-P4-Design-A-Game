@@ -45,9 +45,9 @@ class Game(ndb.Model):
         progress = ''
         for i, c in enumerate(self.target):
             if i in self.guessed_letters:
-                progress.append(c)
+                progress += c
             else:
-                progress.append('_')
+                progress += '_'
         return progress
 
     def to_form(self, message):

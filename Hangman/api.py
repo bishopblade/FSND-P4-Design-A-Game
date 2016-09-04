@@ -96,16 +96,21 @@ class HangmanApi(remote.Service):
         if game.game_over:
             return game.to_form('Game already over!')
 
-        game.attempts_remaining -= 1
-        msg = 'Letter was not in the word! Word progress: %s'
-        for i, c in enumerate(game.target):
+        letterInWord = False
+         for i, c in enumerate(game.target):
             if request.guess == c and i not in game.guessed_letters:
                 game.guessed_letters.append(i)
-                msg = 'Letter was in the word! Word progress: %s'
+                letterInWord = True
 
         if len(game.guessed_letters) == len(game.target):
             game.end_game(True)
             return game.to_form('You win!')
+
+        if letterInWord:
+            msg = 'Letter was in the word! Word progress: %s'
+        else:
+            msg = 'Letter was not in the word! Word progress: %s'
+            game.attempts_remaining -= 1
 
         if game.attempts_remaining < 1:
             game.end_game(False)
