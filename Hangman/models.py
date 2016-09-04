@@ -33,12 +33,22 @@ class Game(ndb.Model):
     def new_game(cls, user, attempts):
         """Creates and returns a new game"""
         game = Game(user=user,
-                    target=random.choice(WORDS_LIST),
+                    target=random.choice(WORDS_LIST).upper(),
+                    guessed_letters=[],
                     attempts_allowed=attempts,
                     attempts_remaining=attempts,
                     game_over=False)
         game.put()
         return game
+
+    def word_progress(self):
+        progress = ''
+        for i, c in enumerate(self.target):
+            if i in self.guessed_letters:
+                progress.append(c)
+            else:
+                progress.append('_')
+        return progress
 
     def to_form(self, message):
         """Returns a GameForm representation of the Game"""

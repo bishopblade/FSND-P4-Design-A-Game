@@ -37,7 +37,7 @@ MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
 
 @endpoints.api(name='hangman', version='v1')
 class HangmanApi(remote.Service):
-    """Game API"""
+    """Hangman API"""
     @endpoints.method(request_message=USER_REQUEST,
                       response_message=StringMessage,
                       path='user',
@@ -97,23 +97,22 @@ class HangmanApi(remote.Service):
             return game.to_form('Game already over!')
 
         game.attempts_remaining -= 1
-        i
-        game.attempts_remaining -= 1
-        if request.guess == game.target:
+        msg = 'Letter was not in the word! Word progress: %s'
+        for i, c in enumerate(game.target):
+            if request.guess == c and i not in game.guessed_letters:
+                game.guessed_letters.append(i)
+                msg = 'Letter was in the word! Word progress: %s'
+
+        if len(game.guessed_letters) == len(game.target):
             game.end_game(True)
             return game.to_form('You win!')
 
-        if request.guess < game.target:
-            msg = 'Too low!'
-        else:
-            msg = 'Too high!'
-
         if game.attempts_remaining < 1:
             game.end_game(False)
-            return game.to_form(msg + ' Game over!')
+            return game.to_form('Game over!');
         else:
             game.put()
-            return game.to_form(msg)
+            return game.to_form(msg % game.word_progress())
 
     @endpoints.method(response_message=ScoreForms,
                       path='scores',
