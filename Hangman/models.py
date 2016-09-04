@@ -14,7 +14,6 @@ with open('countries.csv') as countries:
     for row in reader:
         WORDS_LIST.append(row[1])
 
-
 class User(ndb.Model):
     """User profile"""
     name = ndb.StringProperty(required=True)
@@ -24,6 +23,7 @@ class User(ndb.Model):
 class Game(ndb.Model):
     """Game object"""
     target = ndb.StringProperty(required=True)
+    guessed_letters = ndb.IntegerProperty(repeated=True)
     attempts_allowed = ndb.IntegerProperty(required=True)
     attempts_remaining = ndb.IntegerProperty(required=True, default=5)
     game_over = ndb.BooleanProperty(required=True, default=False)
