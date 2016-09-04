@@ -4,7 +4,8 @@ This can also contain game logic. For more complex games it would be wise to
 move game logic to another file. Ideally the API will be simple, concerned
 primarily with communication to/from the API's users."""
 
-
+import csv
+import random
 import logging
 import endpoints
 from protorpc import remote, messages
@@ -15,6 +16,13 @@ from models import User, Game, Score
 from models import StringMessage, NewGameForm, GameForm, MakeMoveForm,\
     ScoreForms
 from utils import get_by_urlsafe
+
+WORDS_LIST = []
+with open('countries.csv') as countries:
+    reader = csv.reader(countries)
+    for row in reader:
+        WORDS_LIST.append(row[1])
+
 
 NEW_GAME_REQUEST = endpoints.ResourceContainer(NewGameForm)
 GET_GAME_REQUEST = endpoints.ResourceContainer(
@@ -56,18 +64,13 @@ class GuessANumberApi(remote.Service):
         if not user:
             raise endpoints.NotFoundException(
                     'A User with that name does not exist!')
-        try:
-            game = Game.new_game(user.key, request.min,
-                                 request.max, request.attempts)
-        except ValueError:
-            raise endpoints.BadRequestException('Maximum must be greater '
-                                                'than minimum!')
+        game = Game.new_game(user.key, request.attempts)
 
         # Use a task queue to update the average attempts remaining.
         # This operation is not needed to complete the creation of a new game
         # so it is performed out of sequence.
         taskqueue.add(url='/tasks/cache_average_attempts')
-        return game.to_form('Good luck playing Guess a Number!')
+        return game.to_form('Have fun playing Hangman!')
 
     @endpoints.method(request_message=GET_GAME_REQUEST,
                       response_message=GameForm,

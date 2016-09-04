@@ -2,33 +2,38 @@
 entities used by the Game. Because these classes are also regular Python
 classes they can include methods (such as 'to_form' and 'new_game')."""
 
+import csv
 import random
 from datetime import date
 from protorpc import messages
 from google.appengine.ext import ndb
 
+WORDS_LIST = []
+with open('countries.csv') as countries:
+    reader = csv.reader(countries)
+    for row in reader:
+        WORDS_LIST.append(row[1])
+
 
 class User(ndb.Model):
     """User profile"""
     name = ndb.StringProperty(required=True)
-    email =ndb.StringProperty()
+    email = ndb.StringProperty()
 
 
 class Game(ndb.Model):
     """Game object"""
-    target = ndb.IntegerProperty(required=True)
+    target = ndb.StringProperty(required=True)
     attempts_allowed = ndb.IntegerProperty(required=True)
     attempts_remaining = ndb.IntegerProperty(required=True, default=5)
     game_over = ndb.BooleanProperty(required=True, default=False)
     user = ndb.KeyProperty(required=True, kind='User')
 
     @classmethod
-    def new_game(cls, user, min, max, attempts):
+    def new_game(cls, user, attempts):
         """Creates and returns a new game"""
-        if max < min:
-            raise ValueError('Maximum must be greater than minimum')
         game = Game(user=user,
-                    target=random.choice(range(1, max + 1)),
+                    target=random.choice(WORDS_LIST),
                     attempts_allowed=attempts,
                     attempts_remaining=attempts,
                     game_over=False)
@@ -80,14 +85,12 @@ class GameForm(messages.Message):
 class NewGameForm(messages.Message):
     """Used to create a new game"""
     user_name = messages.StringField(1, required=True)
-    min = messages.IntegerField(2, default=1)
-    max = messages.IntegerField(3, default=10)
     attempts = messages.IntegerField(4, default=5)
 
 
 class MakeMoveForm(messages.Message):
     """Used to make a move in an existing game"""
-    guess = messages.IntegerField(1, required=True)
+    guess = messages.StringField(1, required=True)
 
 
 class ScoreForm(messages.Message):
