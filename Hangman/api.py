@@ -104,7 +104,7 @@ class HangmanApi(remote.Service):
 
         if len(game.guessed_letters) == len(game.target):
             game.end_game(True)
-            return game.to_form('You win!')
+            return game.to_form('You win! Word was %s' % game.word_progress())
 
         if letterInWord:
             msg = 'Letter was in the word! Word progress: %s'
