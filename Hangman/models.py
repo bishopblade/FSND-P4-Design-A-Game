@@ -100,6 +100,9 @@ class NewGameForm(messages.Message):
     user_name = messages.StringField(1, required=True)
     attempts = messages.IntegerField(4, default=5)
 
+class MessageForm(messages.Message):
+    """Used to send a single message"""
+    message = messages.StringField(1, required=True)
 
 class MakeMoveForm(messages.Message):
     """Used to make a move in an existing game"""
