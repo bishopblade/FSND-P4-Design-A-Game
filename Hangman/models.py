@@ -93,7 +93,7 @@ class GameForm(messages.Message):
 
 class UserGamesForm(messages.Message):
     """Form to store list of games"""
-    games = message.StringField(1, repeated=True)
+    games = messages.StringField(1, repeated=True)
 
 class NewGameForm(messages.Message):
     """Used to create a new game"""
