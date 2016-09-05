@@ -91,6 +91,9 @@ class GameForm(messages.Message):
     message = messages.StringField(4, required=True)
     user_name = messages.StringField(5, required=True)
 
+class UserGamesForm(messages.Message):
+    """Form to store list of games"""
+    games = message.StringField(1, repeated=True)
 
 class NewGameForm(messages.Message):
     """Used to create a new game"""

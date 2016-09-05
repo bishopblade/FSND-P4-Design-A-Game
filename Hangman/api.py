@@ -13,7 +13,7 @@ from google.appengine.api import memcache
 from google.appengine.api import taskqueue
 
 from models import User, Game, Score
-from models import StringMessage, NewGameForm, GameForm, MakeMoveForm,\
+from models import StringMessage, NewGameForm, UserGamesForm, GameForm, MakeMoveForm,\
     ScoreForms
 from utils import get_by_urlsafe
 
@@ -25,6 +25,8 @@ with open('countries.csv') as countries:
 
 
 NEW_GAME_REQUEST = endpoints.ResourceContainer(NewGameForm)
+GET_USER_GAMES_REQUEST = endpoints.ResourceContainer(
+        user=messages.StringField(1))
 GET_GAME_REQUEST = endpoints.ResourceContainer(
         urlsafe_game_key=messages.StringField(1),)
 MAKE_MOVE_REQUEST = endpoints.ResourceContainer(
@@ -71,6 +73,23 @@ class HangmanApi(remote.Service):
         # so it is performed out of sequence.
         taskqueue.add(url='/tasks/cache_average_attempts')
         return game.to_form('Have fun playing Hangman!')
+
+    @endpoints.method(request_message=GET_USER_GAMES_REQUEST,
+            response_message=UserGamesForm,
+            path='user/{user}/games',
+            name='get_user_games',
+            http_method='GET')
+    def get_user_games(self, request):
+        user = User.query(User.name == request.user).get()
+        if not user:
+            raise endpoints.NotFoundException(
+                    'A user with that name does not exist!')
+        games = Game.query(Game.user == user.key)
+        game_keys = []
+        for game in games:
+            game_keys.append(game.key.urlsafe())
+
+        return UserGamesForm(games=game_keys) 
 
     @endpoints.method(request_message=GET_GAME_REQUEST,
                       response_message=GameForm,
