@@ -18,14 +18,16 @@ class SendReminderEmail(webapp2.RequestHandler):
         app_id = app_identity.get_application_id()
         users = User.query(User.email != None)
         for user in users:
-            subject = 'This is a reminder!'
-            body = 'Hello {}, try out Hangman!'.format(user.name)
-            # This will send test emails, the arguments to send_mail are:
-            # from, to, subject, body
-            mail.send_mail('noreply@{}.appspotmail.com'.format(app_id),
-                           user.email,
-                           subject,
-                           body)
+            games = Game.query(Game.user == user.key).fetch()
+            if sum(!game.game_over for game in games) > 0:
+                subject = 'Unfinished game!'
+                body = 'Hello {}, remember to finish your game of Hangman!'.format(user.name)
+                # This will send test emails, the arguments to send_mail are:
+                # from, to, subject, body
+                mail.send_mail('noreply@{}.appspotmail.com'.format(app_id),
+                               user.email,
+                               subject,
+                               body)
 
 
 class UpdateAverageMovesRemaining(webapp2.RequestHandler):
