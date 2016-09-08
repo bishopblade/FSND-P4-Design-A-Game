@@ -11,6 +11,7 @@ import endpoints
 from protorpc import remote, messages
 from google.appengine.api import memcache
 from google.appengine.api import taskqueue
+from google.appengine.ext import ndb
 
 from models import User, Game, Score
 from models import StringMessage, NewGameForm, UserGamesForm, GameForm, MakeMoveForm,\
@@ -201,7 +202,9 @@ class HangmanApi(remote.Service):
             http_method='GET')
     def get_user_rankings(self, request):
         """Returns all users' rankings"""
-        users = User.query().order(User.ranking).fetch()
+        # Re-put all User entities to recalculate ranking points
+        ndb.put_multi(User.query().fetch())
+        users = User.query().order(User.ranking_points).fetch()
         return RankingsMessage(rankings=[user.to_form() for user in users])
 
     @endpoints.method(response_message=StringMessage,

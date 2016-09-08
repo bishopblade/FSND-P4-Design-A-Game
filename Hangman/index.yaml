@@ -1,6 +1,6 @@
 indexes:
 - kind: Score
-- properties:
+  properties:
   - name: user
   - name: guesses
 

@@ -14,21 +14,24 @@ with open('countries.csv') as countries:
     for row in reader:
         WORDS_LIST.append(row[1])
 
+def getRanking(self):
+    scores = Score.query(Score.user == self.key)
+    guesses = sum(score.guesses for score in scores)
+    wins = sum(score.won for score in scores)
+
+    if guesses > 0:
+        return float(wins) / guesses
+    else:
+        return float(wins)
+
 class User(ndb.Model):
     """User profile"""
     name = ndb.StringProperty(required=True)
     email = ndb.StringProperty()
-
-    @property
-    def ranking(self):
-        scores = Score.query(Score.user == self.key)
-        guesses = sum(score.guesses for score in scores)
-        wins = sum(score.won for score in scores)
-
-        return wins / guesses
+    ranking_points = ndb.ComputedProperty(getRanking)
 
     def to_form(self):
-        return RankingMessage(user_name=self.name, ranking_points=self.ranking) 
+        return RankingMessage(user_name=self.name, ranking_points=self.ranking_points) 
 
 class Game(ndb.Model):
     """Game object"""
