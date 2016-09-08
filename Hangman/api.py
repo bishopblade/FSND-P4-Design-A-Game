@@ -124,8 +124,11 @@ class HangmanApi(remote.Service):
         """Cancel the game."""
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
         if game:
-            game.key.delete()
-            return MessageForm(message='Game deleted.')
+            if game.game_over:
+                raise endpoints.BadRequestException('Game is already over.')
+            else:
+                game.key.delete()
+                return MessageForm(message='Game deleted.')
         else:
             raise endpoints.NotFoundException('Game not found!')
 
