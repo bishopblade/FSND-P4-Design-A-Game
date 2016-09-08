@@ -41,6 +41,7 @@ class Game(ndb.Model):
     attempts_remaining = ndb.IntegerProperty(required=True, default=5)
     game_over = ndb.BooleanProperty(required=True, default=False)
     user = ndb.KeyProperty(required=True, kind='User')
+    history = ndb.TextProperty(required=True, default='[]')
 
     @classmethod
     def new_game(cls, user, attempts):

@@ -6,6 +6,7 @@ primarily with communication to/from the API's users."""
 
 import csv
 import random
+import json
 import logging
 import endpoints
 from protorpc import remote, messages
@@ -40,6 +41,12 @@ HIGH_SCORES_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField
         number_of_results=messages.IntegerField(2))
 
 MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
+
+def updateHistory(game, guess, msg):
+    history = json.loads(game.history)
+    history.append([guess, msg])
+    game.history = json.dumps(history)
+    game.put()
 
 @endpoints.api(name='hangman', version='v1')
 class HangmanApi(remote.Service):
@@ -126,6 +133,19 @@ class HangmanApi(remote.Service):
         else:
             raise endpoints.NotFoundException('Game not found!')
 
+    @endpoints.method(request_message=GET_GAME_REQUEST,
+            response_message=MessageForm,
+            path='/game/{urlsafe_game_key}/history',
+            name='get_game_history',
+            http_method='GET')
+    def get_game_history(self, request):
+        """Return the game's history of moves."""
+        game = get_by_urlsafe(request.urlsafe_game_key, Game)
+        if game:
+            return MessageForm(message=game.history)
+        else:
+            raise endpoints.NotFoundException('Game not found!')
+
     @endpoints.method(request_message=MAKE_MOVE_REQUEST,
                       response_message=GameForm,
                       path='game/{urlsafe_game_key}',
@@ -144,8 +164,10 @@ class HangmanApi(remote.Service):
                 letterInWord = True
 
         if len(game.guessed_letters) == len(game.target):
+            msg = 'You win! Word was %s' % game.word_progress()
+            updateHistory(game, request.guess, msg)
             game.end_game(True)
-            return game.to_form('You win! Word was %s' % game.word_progress())
+            return game.to_form(msg)
 
         if letterInWord:
             msg = 'Letter was in the word! Word progress: %s'
@@ -154,10 +176,12 @@ class HangmanApi(remote.Service):
             game.attempts_remaining -= 1
 
         if game.attempts_remaining < 1:
+            msg = 'Game over!'
+            updateHistory(game, request.guess, msg)
             game.end_game(False)
-            return game.to_form('Game over!');
+            return game.to_form(msg);
         else:
-            game.put()
+            updateHistory(game, request.guess, msg % game.word_progress())
             return game.to_form(msg % game.word_progress())
 
     @endpoints.method(response_message=ScoreForms,
@@ -203,7 +227,7 @@ class HangmanApi(remote.Service):
     def get_user_rankings(self, request):
         """Returns all users' rankings"""
         # Re-put all User entities to recalculate ranking points
-        ndb.put_multi(User.query().fetch())
+        ndb.put_multi(User.query().fetcahFzfmdhbWUtYXBpLTE0MjQwNXIRCxIER2FtZRiAgICAmZmNCgwh())
         users = User.query().order(User.ranking_points).fetch()
         return RankingsMessage(rankings=[user.to_form() for user in users])
 
