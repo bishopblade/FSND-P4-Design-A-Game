@@ -14,7 +14,7 @@ from google.appengine.api import taskqueue
 
 from models import User, Game, Score
 from models import StringMessage, NewGameForm, UserGamesForm, GameForm, MakeMoveForm,\
-    ScoreForms, MessageForm
+    ScoreForms, MessageForm, RankingsMessage, RankingMessage
 from utils import get_by_urlsafe
 
 WORDS_LIST = []
