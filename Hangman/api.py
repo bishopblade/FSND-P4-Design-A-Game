@@ -5,18 +5,28 @@ move game logic to another file. Ideally the API will be simple, concerned
 primarily with communication to/from the API's users."""
 
 import csv
-import random
 import json
-import logging
 import endpoints
 from protorpc import remote, messages
 from google.appengine.api import memcache
 from google.appengine.api import taskqueue
 from google.appengine.ext import ndb
 
-from models import User, Game, Score
-from models import StringMessage, NewGameForm, UserGamesForm, GameForm, MakeMoveForm,\
-    ScoreForms, MessageForm, RankingsMessage, RankingMessage
+from models import (
+    User,
+    Game,
+    Score,
+    StringMessage, 
+    NewGameForm, 
+    UserGamesForm, 
+    GameForm, 
+    MakeMoveForm,
+    ScoreForms, 
+    MessageForm, 
+    RankingsMessage, 
+    RankingMessage
+)
+
 from utils import get_by_urlsafe
 
 WORDS_LIST = []
@@ -109,7 +119,7 @@ class HangmanApi(remote.Service):
             response_message=MessageForm,
             path='/game/{urlsafe_game_key}/cancel',
             name='cancel_game',
-            http_method='PUT')
+            http_method='DELETE')
     def cancel_game(self, request):
         """Cancel the game."""
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
@@ -155,13 +165,25 @@ class HangmanApi(remote.Service):
         """Makes a move. Returns a game state with message"""
         game = get_by_urlsafe(request.urlsafe_game_key, Game)
         if game.game_over:
-            return game.to_form('Game already over!')
+            return endpoints.BadRequestException('Game is already over!')
 
         letterInWord = False
-        for i, c in enumerate(game.target):
-            if request.guess == c and i not in game.guessed_letters:
-                game.guessed_letters.append(i)
-                letterInWord = True
+        if request.guess.isalpha():
+            if request.guess == game.target:
+                msg = 'You win! Word was %s' % game.word_progress()
+                updateHistory(game, request.guess, msg)
+                game.end_game(True)
+                return game.to_form(msg)
+            else:
+                if len(request.guess) == 1:
+                    for i, c in enumerate(game.target):
+                    if request.guess.upper() == c and i not in game.guessed_letters:
+                        game.guessed_letters.append(i)
+                        letterInWord = True
+                else:
+                    raise endpoints.BadRequestException('Guess must be a single character or the word!')
+        else:
+            raise endpoints.BadRequestException('Guess must be all letters!')
 
         if len(game.guessed_letters) == len(game.target):
             msg = 'You win! Word was %s' % game.word_progress()
@@ -179,7 +201,7 @@ class HangmanApi(remote.Service):
             msg = 'Game over!'
             updateHistory(game, request.guess, msg)
             game.end_game(False)
-            return game.to_form(msg);
+            return game.to_form(msg)
         else:
             updateHistory(game, request.guess, msg % game.word_progress())
             return game.to_form(msg % game.word_progress())
@@ -206,18 +228,13 @@ class HangmanApi(remote.Service):
         scores = Score.query(Score.user == user.key)
         return ScoreForms(items=[score.to_form() for score in scores])
 
-    @endpoints.method(request_message=HIGH_SCORES_REQUEST,
-            response_message=ScoreForms,
+    @endpoints.method(response_message=ScoreForms,
             path='/scores/user/{user_name}/high',
             name='get_high_scores',
             http_method='GET')
     def get_high_scores(self, request):
         """Returns all of a User's scores sorted by score"""
-        user = User.query(User.name == request.user_name).get()
-        if not user:
-            raise endpoints.NotFoundException(
-                    'A user with that name does not exist!')
-        scores = Score.query(Score.user == user.key).order(Score.guesses)
+        scores = Score.query().order(Score.guesses)
         return ScoreForms(items=[score.to_form() for score in scores.fetch(request.number_of_results)])
 
     @endpoints.method(response_message=RankingsMessage,
@@ -227,7 +244,7 @@ class HangmanApi(remote.Service):
     def get_user_rankings(self, request):
         """Returns all users' rankings"""
         # Re-put all User entities to recalculate ranking points
-        ndb.put_multi(User.query().fetcahFzfmdhbWUtYXBpLTE0MjQwNXIRCxIER2FtZRiAgICAmZmNCgwh())
+        ndb.put_multi(User.query().fetch())
         users = User.query().order(User.ranking_points).fetch()
         return RankingsMessage(rankings=[user.to_form() for user in users])
 

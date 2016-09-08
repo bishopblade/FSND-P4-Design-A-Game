@@ -1,6 +1,8 @@
 # Hangman Game API
 
 Welcome to the Hangman API. This document details how to query the Hangman API.
+In this implementation of Hangman, the word you have to guess will be randomly selected from a list of countries.
+On each turn you can either guess a single character or try to guess the entire word.
 
 ## Gameplay
 To create a game, first send a request to the create_user endpoint. After a user is created, you can create a game
@@ -10,63 +12,129 @@ word. All words are selected randomly from a list of countries.
 ## Endpoints
 
 ### create_user
-URL: POST `/user`
+Path: `/user`
 
-Creates a user. Requires an email and a username.
+Method: POST
+
+Parameters: user_name, email
+
+Returns: StringMessage showing result of user creation.
+
+Creates a user.
 
 ### new_game
-URL: POST `/game`
+Path: `/game`
 
-Creates a new game. Requires a username, and returns a URL-safe game key.
+Method: POST
+
+Parameters: user_name, attempts
+
+Returns: GameForm containing information about the created game.
+
+Creates a new game.
 
 ### make_move
-URL: PUT `/game/<key>`
+Path: `/game/<key>`
 
-Allows player to guess a letter in the word. Takes the URL-safe game key and a letter, and returns whether the letter
+Method: PUT
+
+Parameters: guess, urlsafe_game_key
+
+Returns: GameForm containing information about the game.
+
+Allows player to guess a letter in the word. Returns whether the letter
 was part of the word along with all the letters guessed.
 
 ### cancel_game
-URL: PUT `/game/<key>/cancel`
+Path: `/game/<key>/cancel`
 
-Cancels a game. Requires the URL-safe game key returned by new_game.
+Method: DELETE
+
+Parameters: urlsafe_game_key
+
+Returns: StringMessage showing result of deleting game.
+
+Cancels a game.
 
 ### get_game
-URL: GET `/game/<key>`
+Path: `/game/<key>`
 
-Returns the current state of a game. Requires the URL-safe game key.
+Method: GET
+
+Parameters: urlsafe_game_key
+
+Returns: GameForm with information about game.
+
+Returns the current state of a game.
 
 ### get_game_history
-URL: GET `/game/<key>/history`
+Path: `/game/<key>/history`
 
-Returns all the moves made in a game. Requires the URL-safe game key.
+Method: GET
+
+Parameters: urlsafe_game_key
+
+Returns: MessageForm with JSON-encoded list of moves made in the game.
+
+Returns all the moves made in a game.
 
 ### get_user_rankings
-URL: GET `/rankings`
+Path: `/rankings`
+
+Method: GET
+
+Returns: RankingsMessage with all users ranked.
 
 Returns the leaderboard of users. Users are ranked as detailed in "Scores" below.
 
 ### get_user_games
-URL: GET `/user/<user>/games`
+Path: `/user/<user>/games`
 
-Returns all the games for a given user. Requires a username.
+Method: GET
+
+Parameters: user
+
+Returns: UserGamesForm with all the games for the requested user.
+
+Returns all the games for a given user.
 
 ### get_scores
-URL: GET `/scores`
+Path: `/scores`
+
+Method: GET
+
+Returns: ScoreForms with all scores.
 
 Returns all the scores.
 
 ### get_user_scores
-URL: GET `/scores/user/<user>`
+Path: `/scores/user/<user>`
 
-Returns scores for a given user. Requires a username.
+Method: GET
+
+Parameters: user_name, email
+
+Returns: ScoreForms with all scores for the requested user.
+
+Returns scores for a given user.
 
 ### get_high_scores
-URL: GET `/scores/user/<user>/high`
+Path: `/scores/user/<user>/high`
 
-Returns scores for a given user sorted by number of guesses needed, ascending. Requires a username.
+Method: GET
+
+Parameters: user_name
+
+Returns: ScoreForms with all scores for the requested user.
+
+Returns scores for a given user sorted by number of guesses needed, ascending.
 
 ### get_average_attempts_remaining
-URL: GET `/games/average_attempts`
+Path: `/games/average_attempts`
+
+Method: GET
+
+Returns: StringMessage with average moves remaining.
 
 Returns the average moves remaining for all games.
 

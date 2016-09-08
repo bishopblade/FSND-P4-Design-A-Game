@@ -8,7 +8,7 @@ import webapp2
 from google.appengine.api import mail, app_identity
 from api import HangmanApi
 
-from models import User
+from models import User, Game
 
 
 class SendReminderEmail(webapp2.RequestHandler):
@@ -18,8 +18,8 @@ class SendReminderEmail(webapp2.RequestHandler):
         app_id = app_identity.get_application_id()
         users = User.query(User.email != None)
         for user in users:
-            games = Game.query(Game.user == user.key).fetch()
-            if sum(!game.game_over for game in games) > 0:
+            games = Game.query(Game.user == user.key, Game.game_over == False).fetch()
+            if games:
                 subject = 'Unfinished game!'
                 body = 'Hello {}, remember to finish your game of Hangman!'.format(user.name)
                 # This will send test emails, the arguments to send_mail are:
@@ -28,7 +28,6 @@ class SendReminderEmail(webapp2.RequestHandler):
                                user.email,
                                subject,
                                body)
-
 
 class UpdateAverageMovesRemaining(webapp2.RequestHandler):
     def post(self):
