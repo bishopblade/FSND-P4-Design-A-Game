@@ -35,6 +35,9 @@ MAKE_MOVE_REQUEST = endpoints.ResourceContainer(
 USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1),
                                            email=messages.StringField(2))
 
+HIGH_SCORES_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1),
+        number_of_results=messages.IntegerField(2))
+
 MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
 
 @endpoints.api(name='hangman', version='v1')
@@ -177,6 +180,29 @@ class HangmanApi(remote.Service):
                     'A User with that name does not exist!')
         scores = Score.query(Score.user == user.key)
         return ScoreForms(items=[score.to_form() for score in scores])
+
+    @endpoints.method(request_message=HIGH_SCORES_REQUEST,
+            response_message=ScoreForms,
+            path='/scores/user/{user_name}/high',
+            name='get_high_scores',
+            http_method='GET')
+    def get_high_scores(self, request):
+        """Returns all of a User's scores sorted by score"""
+        user = User.query(User.name == request.user_name).get()
+        if not user:
+            raise endpoints.NotFoundException(
+                    'A user with that name does not exist!')
+        scores = Score.query(Score.user == user.key).order(Score.guesses)
+        return ScoreForms(items=[score.to_form() for score in scores.fetch(request.number_of_results)])
+
+    @endpoints.method(response_message=RankingsMessage,
+            path='/rankings',
+            name='get_user_rankings',
+            http_method='GET')
+    def get_user_rankings(self, request):
+        """Returns all users' rankings"""
+        users = User.query().order(User.ranking).fetch()
+        return RankingsMessage(rankings=[user.to_form() for user in users])
 
     @endpoints.method(response_message=StringMessage,
                       path='games/average_attempts',

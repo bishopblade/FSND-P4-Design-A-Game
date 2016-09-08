@@ -19,6 +19,16 @@ class User(ndb.Model):
     name = ndb.StringProperty(required=True)
     email = ndb.StringProperty()
 
+    @property
+    def ranking(self):
+        scores = Score.query(Score.user == self.key)
+        guesses = sum(score.guesses for score in scores)
+        wins = sum(score.won for score in scores)
+
+        return wins / guesses
+
+    def to_form(self):
+        return RankingMessage(user_name=self.name, ranking_points=self.ranking) 
 
 class Game(ndb.Model):
     """Game object"""
@@ -121,6 +131,14 @@ class ScoreForms(messages.Message):
     """Return multiple ScoreForms"""
     items = messages.MessageField(ScoreForm, 1, repeated=True)
 
+class RankingMessage(messages.Message):
+    """Represents information for an individual player in rankings"""
+    user_name = messages.StringField(1, required=True)
+    ranking_points = messages.FloatField(2, required=True)
+
+class RankingsMessage(messages.Message):
+    """Message for player rankings"""
+    rankings = messages.MessageField(RankingMessage, 1, repeated=True)
 
 class StringMessage(messages.Message):
     """StringMessage-- outbound (single) string message"""
