@@ -3,6 +3,7 @@
 Welcome to the Hangman API. This document details how to query the Hangman API.
 In this implementation of Hangman, the word you have to guess will be randomly selected from a list of countries.
 On each turn you can either guess a single character or try to guess the entire word.
+See [Hangman](https://en.wikipedia.org/wiki/Hangman) on Wikipedia.
 
 ## Gameplay
 To create a game, first send a request to the create_user endpoint. After a user is created, you can create a game

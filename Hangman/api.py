@@ -16,14 +16,14 @@ from models import (
     User,
     Game,
     Score,
-    StringMessage, 
-    NewGameForm, 
-    UserGamesForm, 
-    GameForm, 
+    StringMessage,
+    NewGameForm,
+    UserGamesForm,
+    GameForm,
     MakeMoveForm,
-    ScoreForms, 
-    MessageForm, 
-    RankingsMessage, 
+    ScoreForms,
+    MessageForm,
+    RankingsMessage,
     RankingMessage
 )
 
@@ -47,8 +47,7 @@ MAKE_MOVE_REQUEST = endpoints.ResourceContainer(
 USER_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1),
                                            email=messages.StringField(2))
 
-HIGH_SCORES_REQUEST = endpoints.ResourceContainer(user_name=messages.StringField(1),
-        number_of_results=messages.IntegerField(2))
+NUMBER_RESULTS_REQUEST = endpoints.ResourceContainer(number_of_results=messages.IntegerField(1))
 
 MEMCACHE_MOVES_REMAINING = 'MOVES_REMAINING'
 
@@ -113,7 +112,7 @@ class HangmanApi(remote.Service):
             if not game.game_over:
                 game_keys.append(game.key.urlsafe())
 
-        return UserGamesForm(games=game_keys) 
+        return UserGamesForm(games=game_keys)
 
     @endpoints.method(request_message=GET_GAME_REQUEST,
             response_message=MessageForm,
@@ -173,16 +172,16 @@ class HangmanApi(remote.Service):
         letterInWord = False
         if request.guess.isalpha():
             if request.guess == game.target:
-                msg = 'You win! Word was %s' % game.word_progress()
+                msg = 'You win! Word was %s' % game.target
                 updateHistory(game, request.guess, msg)
                 game.end_game(True)
                 return game.to_form(msg)
             else:
                 if len(request.guess) == 1:
                     for i, c in enumerate(game.target):
-                    if request.guess.upper() == c and i not in game.guessed_letters:
-                        game.guessed_letters.append(i)
-                        letterInWord = True
+                        if request.guess.upper() == c and i not in game.guessed_letters:
+                            game.guessed_letters.append(i)
+                            letterInWord = True
                 else:
                     raise endpoints.BadRequestException('Guess must be a single character or the word!')
         else:
@@ -231,7 +230,8 @@ class HangmanApi(remote.Service):
         scores = Score.query(Score.user == user.key)
         return ScoreForms(items=[score.to_form() for score in scores])
 
-    @endpoints.method(response_message=ScoreForms,
+    @endpoints.method(request_message=NUMBER_RESULTS_REQUEST,
+            response_message=ScoreForms,
             path='/scores/user/{user_name}/high',
             name='get_high_scores',
             http_method='GET')
